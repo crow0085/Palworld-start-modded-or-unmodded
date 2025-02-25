@@ -3,18 +3,17 @@ import sys
 import os
 import time
 import shutil 
+import glob
 
 dll_name_modded = "dwmapi.dll"
 dll_name_unmodded = "dwmapi.unmodded.dll"
 
-ue4ss_name_modded = "UE4SS.dll"
-ue4ss_name_unmodded = "UE4SS.unmodded.dll"
-
 pal_exe = "Palworld.exe"
+pal_pak = "Pal-Windows.pak"
 
 palworld_path = "C:/Program Files (x86)/Steam/steamapps/common/Palworld"
 paks_path = "C:/Program Files (x86)/Steam/steamapps/common/Palworld/Pal/Content/Paks/"
-ue4ss_path = 'C:/Program Files (x86)/Steam/steamapps/common/Palworld/Pal/Binaries/Win64/'
+dwmapi_path = "C:/Program Files (x86)/Steam/steamapps/common/Palworld/Pal/Binaries/Win64/"
 
 unmodded_path = "C:/Program Files (x86)/Steam/steamapps/common/Palworld/Pal/Content/mods/"
 
@@ -37,52 +36,41 @@ def main():
         choice = input("Enter 1 for modded, 2 for unmodded, or 3 to quit Palworld: ").strip()
 
 def start_modeded():
+    if os.path.exists(dwmapi_path+dll_name_unmodded):
+        print("Renaming "+dwmapi_path+dll_name_unmodded+" to "+dwmapi_path+dll_name_modded)
+        os.rename(dwmapi_path+dll_name_unmodded, dwmapi_path+dll_name_modded)
 
-    if os.path.exists(ue4ss_path+dll_name_unmodded):
-        os.rename(ue4ss_path+dll_name_unmodded, ue4ss_path+dll_name_modded)
-    
-    if os.path.exists(ue4ss_path+ue4ss_name_unmodded):
-        os.rename(ue4ss_path+ue4ss_name_unmodded, ue4ss_path+ue4ss_name_modded)
-    
-    if os.path.exists(ue4ss_path+dll_name_modded) and os.path.exists(ue4ss_path+ue4ss_name_modded):
-        print("moving mods to: " + paks_path)
-
-        try:
-            new_path = shutil.move(unmodded_path + '~mods/', paks_path) 
-            new_path = shutil.move(unmodded_path + 'LogicMods/', paks_path) 
-            time.sleep(3) # Sleep for 3 seconds
-        except:
-            print("Error moving files, either they already have been moved, or dont exist")
-        print("starting palworld")
-        
-        os.chdir(palworld_path)
-        os.system(pal_exe)
-        time.sleep(3) # Sleep for 3 seconds
-        quit()
-    else:
-        print("dwmapi.dll not found.")
-
-def start_unmodeded():
-
-    if os.path.exists(ue4ss_path+dll_name_modded):
-        os.rename(ue4ss_path+dll_name_modded, ue4ss_path+dll_name_unmodded)
-	
-    if os.path.exists(ue4ss_path+ue4ss_name_modded):
-        os.rename(ue4ss_path+ue4ss_name_modded, ue4ss_path+ue4ss_name_unmodded)
-
-    print("moving mods to: " + unmodded_path)    
-
-    try:
-        new_path = shutil.move(paks_path + '~mods/', unmodded_path) 
-        new_path = shutil.move(paks_path + 'LogicMods/', unmodded_path) 
-        time.sleep(3) # Sleep for 3 seconds
-    except:
-        print("Error moving files, either they already have been moved, or dont exist")    
-	
-    print("starting palworld")
+    src_dir = unmodded_path
+    dst_dir = paks_path
+    for p in glob.glob('**/*.pak', recursive=True, root_dir=src_dir):
+        print("moving "+ p + " to " + dst_dir)
+        if (p != pal_pak):
+            os.makedirs(os.path.join(dst_dir, os.path.dirname(p)), exist_ok=True)
+            shutil.move(os.path.join(src_dir, p), os.path.join(dst_dir, p))
+    print("Starting Palworld")
     os.chdir(palworld_path)
     os.system(pal_exe)
-    time.sleep(2) # Sleep for 3 seconds
+    time.sleep(3) # Sleep for 3 seconds
+    pause = input("Press any key to continue...")
+    quit()
+
+def start_unmodeded():
+    if os.path.exists(dwmapi_path+dll_name_modded):
+        print("Renaming "+dwmapi_path+dll_name_modded+" to "+dwmapi_path+dll_name_unmodded)
+        os.rename(dwmapi_path+dll_name_modded, dwmapi_path+dll_name_unmodded)
+
+    src_dir = paks_path
+    dst_dir = unmodded_path
+    for p in glob.glob('**/*.pak', recursive=True, root_dir=src_dir):        
+        if (p != pal_pak):
+            print("moving "+ p + " to " + dst_dir)
+            os.makedirs(os.path.join(dst_dir, os.path.dirname(p)), exist_ok=True)
+            shutil.move(os.path.join(src_dir, p), os.path.join(dst_dir, p))
+    print("Starting Palworld")
+    os.chdir(palworld_path)
+    os.system(pal_exe)
+    time.sleep(3) # Sleep for 3 seconds
+    pause = input("Press any key to continue...")
     quit()
 
 if __name__ == "__main__":
